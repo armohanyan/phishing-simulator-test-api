@@ -62,4 +62,4 @@ docker-compose down
 
 •	Docker Issues: If you encounter any Docker issues, ensure Docker and Docker Compose are installed correctly.
 
-•	Port Conflicts: Make sure that the ports 3000, 3001, and 27017 are not being used by other services on your system.
+•	Port Conflicts: Make sure that the ports are not being used by other services on your system.
