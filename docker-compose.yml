@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  gateway:
+    build: ./gateway
+    restart: always
+    hostname: gateway
+    env_file:
+      - .env
+    ports:
+      - ${API_GATEWAY_PORT}:${API_GATEWAY_PORT}
+    networks:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_GATEWAY_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  service-simulator:
+    build: ./service-simulator
+    restart: always
+    hostname: service-simulator
+    env_file:
+      - .env
+    ports:
+      - ${SIMULATOR_SERVICE_PORT}:${SIMULATOR_SERVICE_PORT}
+    networks:
+      - backend
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SIMULATOR_SERVICE_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  service-attempt:
+    build: ./service-attempt
+    restart: always
+    hostname: service-attempt
+    env_file:
+      - .env
+    ports:
+      - ${ATTEMPT_SERVICE_PORT}:${ATTEMPT_SERVICE_PORT}
+    networks:
+      - backend
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${ATTEMPT_SERVICE_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: 'mongo:6.0'
+    restart: always
+    hostname: db
+    environment:
+     MONGO_INITDB_DATABASE: ${MONGO_DSN}
+    volumes:
+      - "./db/init:/docker-entrypoint-initdb.d"
+      - "mongo_data:/data/db"
+    networks:
+      - backend
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+
+volumes:
+  mongo_data:

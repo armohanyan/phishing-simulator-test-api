@@ -1,0 +1,6 @@
+export enum E_STATUS {
+    PENDING='PENDING',
+    SENT='SENT',
+    FAILED='FAILED',
+    RESOLVED='RESOLVED'
+}
