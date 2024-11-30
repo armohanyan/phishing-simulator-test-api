@@ -28,7 +28,7 @@ services:
     networks:
       - backend
     depends_on:
-      - db
+      - mongodb
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${SIMULATOR_SERVICE_PORT}/health"]
       interval: 30s
@@ -46,22 +46,23 @@ services:
     networks:
       - backend
     depends_on:
-      - db
+      - mongodb
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${ATTEMPT_SERVICE_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  db:
-    image: 'mongo:6.0'
+  mongodb:
+    image: 'mongo'
     restart: always
-    hostname: db
+    container_name: mongo
     environment:
-     MONGO_INITDB_DATABASE: ${MONGO_DSN}
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - "./db/init:/docker-entrypoint-initdb.d"
-      - "mongo_data:/data/db"
+      - ./db/init:/docker-entrypoint-initdb.d 
+      - mongo_data:/data/db
     networks:
       - backend
     ports:
