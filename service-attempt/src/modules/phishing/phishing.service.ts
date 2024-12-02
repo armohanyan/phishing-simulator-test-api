@@ -84,6 +84,7 @@ export class PhishingService {
     }
 
     attempt.status = 'clicked';
+    
     await attempt.save();
   }
 
