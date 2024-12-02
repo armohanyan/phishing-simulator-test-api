@@ -13,6 +13,9 @@ export class Phishing extends Document {
 
   @Prop({ default: 'pending' })
   status: string;
+
+  @Prop()
+  expiredIn: number;
 }
 
 export const PhishingSchema = SchemaFactory.createForClass(Phishing);

@@ -5,6 +5,7 @@ import { RpcException } from '@nestjs/microservices';
 import { Phishing } from '../../schemas/phishing/phishing.schema';
 import * as process from 'node:process';
 import { MailService } from '../mail/mail.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class PhishingService {
@@ -12,6 +13,7 @@ export class PhishingService {
     @InjectModel(Phishing.name)
     private readonly phishingSchema: Model<Phishing>,
     private readonly mailService: MailService,
+    private jwtService: JwtService,
   ) {}
 
   /**
@@ -20,28 +22,23 @@ export class PhishingService {
    * @throws RpcException if a phishing email has already been sent to the address.
    */
   async sendEmailToTarget(email: string): Promise<Phishing> {
-    const alreadyAttempted = await this.phishingSchema
-      .findOne({ email })
-      .exec();
-
-    if (alreadyAttempted) {
-      throw new RpcException({
-        message: 'Phishing email already sent to this address.',
-        type: 'BAD_REQUEST',
-      });
-    }
-
     try {
-      const url = `${process.env.APP_URL}/phishing/on-trigger?email=${email}`;
-      const content = `<p>This is a simulated phishing attempt. Click <a href="${url}">here</a> to check the result.</p>`;
+      const token = this.jwtService.sign({
+        email, // prevent email injection
+      });
 
-      await this.mailService.sendPhishingEmail(email, content);
+      console.log(token);
+
+      const url = `${process.env.APP_URL}/phishing/on-trigger?token=${token}`;
+      const content = `<p>This is a simulated phishing attempt. Click <a href="${url}">here</a> to check the result.</p>`;
 
       const newPhishingAttempt = new this.phishingSchema({
         email,
         status: 'pending',
         content,
       });
+
+      await this.mailService.sendPhishingEmail(email, content);
 
       await newPhishingAttempt.save();
 
@@ -56,19 +53,27 @@ export class PhishingService {
 
   /**
    * Marks a pending phishing attempt as clicked for the specified email address.
-   * @param email The email address associated with the phishing attempt.
    * @throws RpcException if no pending phishing attempt is found.
+   * @param token
    */
-  async markAttemptAsClicked(email: string): Promise<void> {
-    if (!email) {
+  async markAttemptAsClicked(token: string): Promise<void> {
+    let email = '';
+
+    try {
+      const payload = (await this.jwtService.verifyAsync(token, {
+        secret: (process.env.JWT_USER_SECRET as string) || 'phishing-secret',
+      })) as { email: string };
+
+      email = payload.email;
+    } catch {
       throw new RpcException({
-        message: 'Email parameter is required.',
+        message: 'Token is Expired',
         type: 'BAD_REQUEST',
       });
     }
 
     const attempt = await this.phishingSchema.findOne({
-      email
+      email,
     });
 
     if (!attempt) {
