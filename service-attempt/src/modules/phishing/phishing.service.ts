@@ -35,16 +35,16 @@ export class PhishingService {
       const url = `${process.env.APP_URL}/phishing/on-trigger?email=${email}`;
       const content = `<p>This is a simulated phishing attempt. Click <a href="${url}">here</a> to check the result.</p>`;
 
+      await this.mailService.sendPhishingEmail(email, content);
+
       const newPhishingAttempt = new this.phishingSchema({
         email,
         status: 'pending',
         content,
       });
 
-      await this.mailService.sendPhishingEmail(email, content);
-      
       await newPhishingAttempt.save();
-      
+
       return newPhishingAttempt;
     } catch {
       throw new RpcException({
@@ -68,8 +68,7 @@ export class PhishingService {
     }
 
     const attempt = await this.phishingSchema.findOne({
-      email,
-      status: 'clicked',
+      email
     });
 
     if (!attempt) {
@@ -79,6 +78,7 @@ export class PhishingService {
       });
     }
 
+    attempt.status = 'clicked';
     await attempt.save();
   }
 
