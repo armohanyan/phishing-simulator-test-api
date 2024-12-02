@@ -68,8 +68,7 @@ export class PhishingService {
     }
 
     const attempt = await this.phishingSchema.findOne({
-      email,
-      status: 'clicked',
+      email
     });
 
     if (!attempt) {
@@ -79,6 +78,7 @@ export class PhishingService {
       });
     }
 
+    attempt.status = 'clicked'
     await attempt.save();
   }
 
