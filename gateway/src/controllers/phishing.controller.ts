@@ -90,8 +90,8 @@ export class PhishingController {
           this.attemptClient.send('victim-clicked', email),
       );
       return { success: response };
-    } catch {
-
+    } catch(e) {
+      console.log(e)
       throw new HttpException(
           'An unexpected error occurred while marking phishing attempt as clicked',
           HttpStatus.INTERNAL_SERVER_ERROR,
