@@ -50,7 +50,6 @@ export class PhishingController {
         throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
       }
 
-      console.error('Unexpected error in sendEmailToTarget:', error);
       throw new HttpException(
           'An unexpected error occurred while sending phishing email',
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -69,7 +68,6 @@ export class PhishingController {
       );
       return response.map((item) => new PhishingDto(item));
     } catch (error) {
-      console.log(error)
       throw new HttpException(
           'An unexpected error occurred while fetching phishing attempts',
           HttpStatus.INTERNAL_SERVER_ERROR,
