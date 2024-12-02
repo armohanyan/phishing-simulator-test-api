@@ -67,7 +67,7 @@ export class PhishingController {
           this.attemptClient.send('get-all-attempts', {}),
       );
       return response.map((item) => new PhishingDto(item));
-    } catch (error) {
+    } catch {
       throw new HttpException(
           'An unexpected error occurred while fetching phishing attempts',
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -83,15 +83,18 @@ export class PhishingController {
     description: 'Email address to mark as clicked',
   })
   async victimClick(
-      @Query('email') email: string,
+      @Query('token') token: string
   ): Promise<{ success: boolean }> {
     try {
       const response = await firstValueFrom(
-          this.attemptClient.send('victim-clicked', email),
+          this.attemptClient.send('victim-clicked', token),
       );
       return { success: response };
-    } catch(e) {
-      console.log(e)
+    } catch(error) {
+      if (error?.type === 'BAD_REQUEST') {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+
       throw new HttpException(
           'An unexpected error occurred while marking phishing attempt as clicked',
           HttpStatus.INTERNAL_SERVER_ERROR,
