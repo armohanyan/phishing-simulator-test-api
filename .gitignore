@@ -19,3 +19,4 @@ coverage
 db/data
 #.env
 .env.test
+./.idea
